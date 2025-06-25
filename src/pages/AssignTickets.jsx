@@ -7,7 +7,6 @@ from "react-icons/hi";
 
 const AssignTickets = ({ authToken, isLoggedIn, assignments, setAssignments }) => {
   const navigate = useNavigate();
-  // assignments and setAssignments now come from props (parent component)
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [teams, setTeams] = useState([]);
@@ -96,7 +95,7 @@ const AssignTickets = ({ authToken, isLoggedIn, assignments, setAssignments }) =
   // Clear assignments manually (for new projects/teams)
   const handleClearAssignments = () => {
     setAssignments([]);
-    console.log("🗑️ Cleared assignments display");
+    console.log(" Cleared assignments display");
   };
 
   const handleInputChange = (e) => {
