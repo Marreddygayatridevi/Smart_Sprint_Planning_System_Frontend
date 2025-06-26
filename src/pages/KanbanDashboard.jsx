@@ -99,7 +99,21 @@ const KanbanDashboard = ({
     updateState({ loading: true });
     
     try {
-      const res = await api.get(`/jira/issues?project_key=${key}`, { headers: authHeaders });
+      // Always try database first for faster loading
+      let res = await api.get(`/jira/issues?project_key=${key}&sync=false`, { headers: authHeaders });
+      
+      // If no issues found in database, try syncing with Jira
+      if (!res.data || res.data.length === 0) {
+        try {
+          console.log(`No local data found. Attempting to sync with Jira for project ${key}...`);
+          res = await api.get(`/jira/issues?project_key=${key}&sync=true`, { headers: authHeaders });
+          console.log(`Successfully synced with Jira for project ${key}`);
+        } catch (syncError) {
+          console.log(`Jira sync failed for project ${key} (this is normal for custom projects):`, syncError.message);
+          // If sync fails, just use empty array - this allows custom projects to work
+          res = { data: [] };
+        }
+      }
       
       const grouped = STATUSES.reduce((acc, status) => ({ ...acc, [status]: [] }), {});
       const issueMap = new Map();
@@ -115,11 +129,14 @@ const KanbanDashboard = ({
       
       setTickets(grouped);
     } catch (err) {
-      handleApiError(err, "Failed to fetch Jira issues");
+      // Gracefully handle all errors
+      console.log(`Error fetching issues for project ${key}:`, err.message);
+      // Set empty tickets to allow working with new projects
+      setTickets(STATUSES.reduce((acc, status) => ({ ...acc, [status]: [] }), {}));
     } finally {
       updateState({ loading: false });
     }
-  }, [authHeaders, transformTicketData, setTickets, handleApiError, updateState]);
+  }, [authHeaders, transformTicketData, setTickets, updateState]);
 
   const createTicket = useCallback(async () => {
     const { newTicket } = state;
@@ -353,7 +370,7 @@ const KanbanDashboard = ({
               value={projectKey}
               onChange={handleProjectKeyChange}
               onKeyDown={handleProjectKeyKeyDown}
-              placeholder="Enter project key"
+              placeholder="Enter any project key"
               className="flex-1 border border-gray-300 rounded-lg px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               disabled={state.loading}
             />
@@ -371,7 +388,7 @@ const KanbanDashboard = ({
         {state.loading && (
           <div className="text-center mb-6">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2"></div>
-            <p className="text-gray-600">Loading tickets from database...</p>
+            <p className="text-gray-600">Loading tickets...</p>
           </div>
         )}
 
