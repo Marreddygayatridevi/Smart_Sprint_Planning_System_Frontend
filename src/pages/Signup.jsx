@@ -203,7 +203,7 @@ const Signup = ({ isLoggedIn }) => {
             name="role"
             value={formData.role}
             onChange={handleChange}
-            placeholder="e.g. developer, designer"
+            placeholder="e.g. junior frontend developer,Intern, etc."
             disabled={status.isLoading}
           />
 
@@ -234,7 +234,7 @@ const Signup = ({ isLoggedIn }) => {
             <p className="text-xs text-gray-500 mt-1">
               {!loadingTeams && teams.length === 0
                 ? "Contact admin to add teams."
-                : "Choose an existing team."}
+                : "Choose an existing team ,If there is no team contact admin."}
             </p>
           </div>
 
